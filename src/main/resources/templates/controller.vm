@@ -1,0 +1,109 @@
+package ${packageName}.controller;
+
+import ${packageName}.domain.dto.${className}DTO;
+import ${packageName}.specification.QueryCondition;
+import ${packageName}.service.${className}Service;
+import ${packageName}.common.utils.Result;
+import ${packageName}.domain.vo.${className}VO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * REST Controller for managing ${className}.
+ * Provides endpoints for creating, reading, updating, and deleting ${className}.
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/${tableName}")
+public class ${className}Controller {
+
+    @Autowired
+    private ${className}Service ${classNameLower}Service;
+
+    /**
+     * Retrieve a paginated list of ${className} with optional search parameters.
+     *
+     * @param pageable pagination information
+     * @param searchParam1 optional search parameter
+     * @param searchParam2 optional search parameter
+     * @return paginated list of ${className} wrapped in a Result
+     */
+    @GetMapping
+    public ResponseEntity<Result<Page<${className}VO>>> getAll(
+            
+             #foreach($field in $queryFields)
+                    @RequestParam(required = false) ${field.javaType} ${field.fieldName},
+                    #end @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<${className}VO> results = ${classNameLower}Service.getAll( #foreach($field in $queryFields)
+                                                                                             ${field.fieldName},
+                                                                                             #end pageable);
+        return ResponseEntity.ok(Result.success(results));
+    }
+
+
+       @PostMapping("/search")
+        public ResponseEntity<Result<Page<${className}VO>>> search(
+                @RequestBody List<QueryCondition> conditions,
+                @PageableDefault(size = 10) Pageable pageable) {
+
+            Page<${className}VO> results = ${classNameLower}Service.search(conditions, pageable);
+            return ResponseEntity.ok(Result.success(results));
+        }
+
+    /**
+     * Retrieve a specific ${className} by ID.
+     *
+     * @param id the ID of the ${className} to retrieve
+     * @return the ${className} details wrapped in a Result
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Result<${className}VO>> read(@PathVariable ${primaryKeyType} id) {
+        ${className}VO result = ${classNameLower}Service.read(id);
+        return ResponseEntity.ok(Result.success(result));
+    }
+
+    /**
+     * Create a new ${className}.
+     *
+     * @param dto the ${className} data transfer object
+     * @return the created ${className} wrapped in a Result
+     */
+    @PostMapping
+    public ResponseEntity<Result<${className}VO>> create( @RequestBody ${className}DTO dto) {
+        ${className}VO createdVO = ${classNameLower}Service.create(dto);
+        return ResponseEntity.ok(Result.success(createdVO));
+    }
+
+    /**
+     * Update an existing ${className}.
+     *
+     * @param id the ID of the ${className} to update
+     * @param dto the updated ${className} data transfer object
+     * @return the updated ${className} wrapped in a Result
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Result<${className}VO>> update(@PathVariable ${primaryKeyType} id,  @RequestBody ${className}DTO dto) {
+        ${className}VO updatedVO = ${classNameLower}Service.update(id, dto);
+        return ResponseEntity.ok(Result.success(updatedVO));
+    }
+
+    /**
+     * Delete a specific ${className} by ID.
+     *
+     * @param id the ID of the ${className} to delete
+     * @return success response wrapped in a Result
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Result<Void>> delete(@PathVariable ${primaryKeyType} id) {
+        ${classNameLower}Service.delete(id);
+        return ResponseEntity.ok(Result.success(null));
+    }
+}

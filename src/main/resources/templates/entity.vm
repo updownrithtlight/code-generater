@@ -1,0 +1,27 @@
+package ${packageName}.domain.entity;
+
+import lombok.Data;
+import ${packageName}.domain.entity.AuditableBaseEntity;
+import jakarta.persistence.*;
+
+
+/**
+ * Entity class for ${tableName}.
+ */
+@Entity
+@Table(name = "${tableName}")
+@Data
+public class ${className}Entity extends AuditableBaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private ${primaryKeyType} id;
+
+    #foreach($field in $fields)
+    #if($field.fieldName != "id" &&$field.fieldName != "createdAt" && $field.fieldName != "updatedAt" && $field.fieldName != "createdBy" && $field.fieldName != "updatedBy")
+    @Column(name = "${field.columnName}"#if($field.nullable == false), nullable = false#end)
+    private ${field.javaType} ${field.fieldName};
+    #end
+    #end
+}
+

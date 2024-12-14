@@ -1,0 +1,89 @@
+package ${packageName}.mapper;
+
+import ${packageName}.domain.dto.${className}DTO;
+import ${packageName}.domain.entity.${className}Entity;
+import ${packageName}.domain.vo.${className}VO;
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+import org.mapstruct.MappingTarget;
+
+import java.util.List;
+
+/**
+ * Mapper interface for converting ${className} entities to DTOs and VOs, and vice versa.
+ */
+@Mapper
+public interface ${className}Mapper {
+
+    /**
+     * Get the Mapper instance.
+     */
+    ${className}Mapper INSTANCE = Mappers.getMapper(${className}Mapper.class);
+
+    /**
+     * Convert Entity to DTO.
+     *
+     * @param entity the ${className} entity
+     * @return the corresponding ${className} DTO
+     */
+    ${className}DTO toDTO(${className}Entity entity);
+
+    /**
+     * Convert DTO to Entity.
+     *
+     * @param dto the ${className} DTO
+     * @return the corresponding ${className} entity
+     */
+    ${className}Entity toEntity(${className}DTO dto);
+
+    /**
+     * Convert Entity to VO.
+     *
+     * @param entity the ${className} entity
+     * @return the corresponding ${className} VO
+     */
+    ${className}VO toVO(${className}Entity entity);
+
+    /**
+     * Convert VO to Entity.
+     *
+     * @param vo the ${className} VO
+     * @return the corresponding ${className} entity
+     */
+    ${className}Entity toEntityFromVO(${className}VO vo);
+
+    void updateEntityFromDTO(${className}DTO dto, @MappingTarget ${className}Entity entity);
+
+
+    /**
+     * Convert a list of Entities to a list of DTOs.
+     *
+     * @param entities the list of ${className} entities
+     * @return the corresponding list of ${className} DTOs
+     */
+    List<${className}DTO> toDTOList(List<${className}Entity> entities);
+
+    /**
+     * Convert a list of DTOs to a list of Entities.
+     *
+     * @param dtos the list of ${className} DTOs
+     * @return the corresponding list of ${className} entities
+     */
+    List<${className}Entity> toEntityList(List<${className}DTO> dtos);
+
+    /**
+     * Convert a list of Entities to a list of VOs.
+     *
+     * @param entities the list of ${className} entities
+     * @return the corresponding list of ${className} VOs
+     */
+    List<${className}VO> toVOList(List<${className}Entity> entities);
+
+    /**
+     * Convert a list of VOs to a list of Entities.
+     *
+     * @param vos the list of ${className} VOs
+     * @return the corresponding list of ${className} entities
+     */
+    List<${className}Entity> toEntityListFromVO(List<${className}VO> vos);
+}

@@ -1,0 +1,66 @@
+package ${packageName}.service;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import ${packageName}.domain.dto.${className}DTO;
+import ${packageName}.domain.vo.${className}VO;
+import ${packageName}.specification.QueryCondition;
+
+import java.util.List;
+/**
+ * Service interface for ${className}.
+ * Handles business logic for managing ${className}.
+ */
+public interface ${className}Service {
+
+    /**
+     * Create a new ${className}.
+     *
+     * @param dto the ${className} DTO containing creation data
+     * @return the created ${className} as a VO
+     */
+    ${className}VO create(${className}DTO dto);
+
+    /**
+     * Retrieve details of a specific ${className}.
+     *
+     * @param id the ID of the ${className} to retrieve
+     * @return the ${className} details as a VO
+     */
+    ${className}VO read(${primaryKeyType} id);
+
+    /**
+     * Update an existing ${className}.
+     *
+     * @param id the ID of the ${className} to update
+     * @param dto the ${className} DTO containing updated data
+     * @return the updated ${className} as a VO
+     */
+    ${className}VO update(${primaryKeyType} id, ${className}DTO dto);
+
+    /**
+     * Delete a specific ${className}.
+     *
+     * @param id the ID of the ${className} to delete
+     */
+    void delete(${primaryKeyType} id);
+
+
+    Page<${className}VO> search(
+                   List<QueryCondition> conditions,
+                  Pageable pageable);
+
+    /**
+     * Query ${className} with pagination and optional keyword search.
+     *
+     * @param keyword optional search keyword
+     * @param pageable pagination details
+     * @return a paginated list of ${className} as VO
+     */
+    Page<${className}VO> getAll( #foreach($field in $queryFields)
+                                                                    @RequestParam(required = false) ${field.javaType} ${field.fieldName},
+                                                                    #end Pageable pageable);
+
+
+
+}

@@ -1,0 +1,86 @@
+package ${packageName}.service.impl;
+
+import ${packageName}.domain.dto.${className}DTO;
+import ${packageName}.domain.vo.${className}VO;
+import ${packageName}.domain.entity.${className}Entity;
+import ${packageName}.mapper.${className}Mapper;
+import ${packageName}.repository.${className}Repository;
+import ${packageName}.service.${className}Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import ${packageName}.specification.QueryCondition;
+import ${packageName}.specification.${className}Specification;
+import java.util.List;
+
+@Service
+public class ${className}ServiceImpl implements ${className}Service {
+
+    @Autowired
+    private ${className}Repository ${classNameLower}Repository;
+
+
+    @Override
+    public ${className}VO create(${className}DTO dto) {
+        // 使用 Mapper 转换 DTO -> Entity
+        ${className}Entity entity = ${className}Mapper.INSTANCE.toEntity(dto);
+
+        // 保存 Entity
+        ${className}Entity savedEntity = ${classNameLower}Repository.save(entity);
+
+        // 使用 Mapper 转换 Entity -> VO
+        return ${className}Mapper.INSTANCE.toVO(savedEntity);
+    }
+
+    @Override
+    public ${className}VO read(${primaryKeyType} id) {
+        // 查询 Entity
+        ${className}Entity entity = ${classNameLower}Repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("${className} not found with ID: " + id));
+
+        // 使用 Mapper 转换 Entity -> VO
+        return ${className}Mapper.INSTANCE.toVO(entity);
+    }
+
+    @Override
+    public ${className}VO update(${primaryKeyType} id, ${className}DTO dto) {
+        // 查询 Entity
+        ${className}Entity entity = ${classNameLower}Repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("${className} not found with ID: " + id));
+
+        // 使用 Mapper 更新 Entity
+        ${className}Mapper.INSTANCE.updateEntityFromDTO(dto, entity);
+
+        // 保存更新后的 Entity
+        ${className}Entity updatedEntity = ${classNameLower}Repository.save(entity);
+
+        // 使用 Mapper 转换 Entity -> VO
+        return ${className}Mapper.INSTANCE.toVO(updatedEntity);
+    }
+
+    @Override
+    public void delete(${primaryKeyType} id) {
+        if (!${classNameLower}Repository.existsById(id)) {
+            throw new RuntimeException("${className} not found with ID: " + id);
+        }
+        ${classNameLower}Repository.deleteById(id);
+    }
+
+    @Override
+    public Page<${className}VO> getAll(  #foreach($field in $queryFields)
+                                                           @RequestParam(required = false) ${field.javaType} ${field.fieldName},
+                                                           #end Pageable pageable) {
+        // 查询分页数据
+        Page<${className}Entity> entities = ${classNameLower}Repository.findAll(pageable);
+
+        // 使用 Mapper 转换 Page<Entity> -> Page<VO>
+        return entities.map(${className}Mapper.INSTANCE::toVO);
+    }
+     @Override
+     public Page<${className}VO> search(List<QueryCondition> conditions, Pageable pageable) {
+            return ${classNameLower}Repository
+                    .findAll(${className}Specification.build(conditions), pageable)
+                    .map(${className}Mapper.INSTANCE::toVO);
+        }
+}
