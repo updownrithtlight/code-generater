@@ -4,7 +4,6 @@ import com.billlv.codegenerator.common.config.CookieProperties;
 import com.billlv.codegenerator.common.utils.JwtUtils;
 import com.billlv.codegenerator.domain.dto.LoginRequestDTO;
 import com.billlv.codegenerator.domain.vo.UsersVO;
-import com.billlv.codegenerator.exception.user.UnauthorizedException;
 import com.billlv.codegenerator.exception.user.UserException;
 import com.billlv.codegenerator.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
