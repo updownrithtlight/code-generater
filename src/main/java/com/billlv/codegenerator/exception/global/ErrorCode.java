@@ -19,6 +19,10 @@ public enum ErrorCode {
     USER_NOT_FOUND(2001, "error.user_not_found"),
     USER_ALREADY_EXISTS(2002, "error.user_already_exists"),
 
+    // 用户相关错误
+    USER_DISABLED(1002, "error.user.disabled"),
+    INVALID_CREDENTIALS(1003, "error.invalid.credentials"),
+
     // 订单模块错误码
     ORDER_NOT_FOUND(3001, "error.order_not_found"),
     ORDER_CANNOT_BE_MODIFIED(3002, "error.order_cannot_be_modified");
