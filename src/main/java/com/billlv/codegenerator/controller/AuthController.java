@@ -83,7 +83,7 @@ public class AuthController {
             return ResponseEntity.status(HttpServletResponse.SC_UNAUTHORIZED)
                     .body(Map.of("error", "Refresh Token is invalid or missing"));
         }
-        String userId = jwtUtils.getUsernameFromToken(refreshToken);
+        String userId = jwtUtils.getUserIdFromToken(refreshToken);
 
         String newAccessToken = jwtUtils.generateAccessToken(userId);
 

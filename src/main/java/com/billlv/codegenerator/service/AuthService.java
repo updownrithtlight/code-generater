@@ -8,6 +8,6 @@ import java.util.Map;
 
 public interface AuthService {
 
-      String login(String username, String password);
+     String login(String username, String password);
      UsersVO read(String id);
 }

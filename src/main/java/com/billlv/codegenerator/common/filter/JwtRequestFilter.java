@@ -47,10 +47,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         try {
-            String username = jwtUtils.getUsernameFromToken(token);
+            String userId = jwtUtils.getUserIdFromToken(token);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                authenticateUser(username, token, request);
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                authenticateUser(userId, token, request);
             }
 
         } catch (ExpiredJwtException e) {
@@ -63,7 +63,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         } catch (Exception e) {
             logger.error("Unexpected error during token validation", e);
-            respondWithError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error");
+            respondWithError(response, HttpServletResponse.SC_UNAUTHORIZED, "Unexpected error");
             return;
         }
 
@@ -74,7 +74,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * 检查是否是无需验证的路径
      */
     private boolean isExcludedPath(String path) {
-        return "/api/auth/login".equals(path) || "/api/auth/register".equals(path);
+        return "/api/auth/login".equals(path)|| "/api/auth/refresh-token".equals(path) || "/api/auth/register".equals(path);
     }
 
     /**
@@ -110,7 +110,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         try {
             // 从 Refresh Token 中提取用户名
-            String userId = jwtUtils.getUsernameFromToken(refreshToken);
+            String userId = jwtUtils.getUserIdFromToken(refreshToken);
             UsersVO usersVO = userService.read(Long.parseLong(userId));
 //            // 加载用户信息
 //            UserDetails userDetails = userService.loadUserByUsername(usersVO.getUsername());
@@ -123,7 +123,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             newAccessTokenCookie.setHttpOnly(true);
             newAccessTokenCookie.setSecure(true); // 在 HTTPS 环境下使用
             newAccessTokenCookie.setPath("/");
-            newAccessTokenCookie.setMaxAge(3600);
+            newAccessTokenCookie.setMaxAge(180);
             response.addCookie(newAccessTokenCookie);
 
             // 将用户重新认证到 SecurityContext
@@ -158,9 +158,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     /**
      * 执行用户认证
      */
-    private void authenticateUser(String username, String token, HttpServletRequest request) {
-        UserDetails userDetails = userService.loadUserByUsername(username);
-
+    private void authenticateUser(String userId, String token, HttpServletRequest request) {
+        UsersVO usersVO = userService.read(Long.parseLong(userId));
+        UserDetails userDetails = userService.loadUserByUsername(usersVO.getUsername());
         if (jwtUtils.validateJwtToken(token)) {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
