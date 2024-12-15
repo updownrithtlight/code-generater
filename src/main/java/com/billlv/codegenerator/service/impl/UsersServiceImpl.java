@@ -9,10 +9,15 @@ import com.billlv.codegenerator.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import com.billlv.codegenerator.specification.QueryCondition;
 import com.billlv.codegenerator.specification.UsersSpecification;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UsersServiceImpl implements UsersService {
@@ -87,5 +92,13 @@ public class UsersServiceImpl implements UsersService {
         UsersEntity entity = usersRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Users not found with username: "+username));
         return UsersMapper.INSTANCE.toVO(entity);
+    }
+
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        UsersVO usersVO = findByUsername(username);
+        return new org.springframework.security.core.userdetails.User(usersVO.getUsername(), usersVO.getPassword(), new ArrayList<>());
+
     }
 }

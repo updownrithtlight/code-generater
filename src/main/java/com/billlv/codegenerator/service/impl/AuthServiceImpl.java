@@ -1,6 +1,5 @@
 package com.billlv.codegenerator.service.impl;
 
-import com.billlv.codegenerator.common.utils.JwtUtils;
 import com.billlv.codegenerator.domain.vo.UsersVO;
 import com.billlv.codegenerator.exception.global.ErrorCode;
 import com.billlv.codegenerator.exception.user.UserException;
@@ -18,9 +17,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UsersService usersService;
-
-    @Autowired
-    private JwtUtils jwtUtils;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -42,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
      * @return 包含 Access Token 和 Refresh Token 的 Map
      */
     @Override
-    public Map<String, String> login(String username, String password) {
+    public String login(String username, String password) {
         // 查找用户信息
         UsersVO usersVO = usersService.findByUsername(username);
 
@@ -57,16 +53,13 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(password, usersVO.getPassword())) {
             throw new UserException(ErrorCode.INVALID_CREDENTIALS);
         }
-
-
         // 生成 JWT Access Token 和 Refresh Token
-        String accessToken = jwtUtils.generateAccessToken(usersVO.getId().toString());
-        String refreshToken = jwtUtils.generateRefreshToken(usersVO.getId().toString());
 
-        // 封装返回结果
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshToken);
-        return tokens;
+        return usersVO.getId().toString();
+    }
+
+    @Override
+    public UsersVO read(String id) {
+        return usersService.read(Long.parseLong(id));
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import com.billlv.codegenerator.domain.dto.UsersDTO;
 import com.billlv.codegenerator.domain.vo.UsersVO;
 import com.billlv.codegenerator.specification.QueryCondition;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +15,7 @@ import java.util.Optional;
  * Service interface for Users.
  * Handles business logic for managing Users.
  */
-public interface UsersService {
+public interface UsersService extends  UserDetailsService {
 
     /**
      * Create a new Users.
