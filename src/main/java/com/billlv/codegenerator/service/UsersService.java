@@ -1,21 +1,18 @@
 package com.billlv.codegenerator.service;
 
-import com.billlv.codegenerator.domain.entity.UsersEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.billlv.codegenerator.domain.dto.UsersDTO;
 import com.billlv.codegenerator.domain.vo.UsersVO;
 import com.billlv.codegenerator.specification.QueryCondition;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Service interface for Users.
  * Handles business logic for managing Users.
  */
-public interface UsersService extends  UserDetailsService {
+public interface UsersService {
 
     /**
      * Create a new Users.

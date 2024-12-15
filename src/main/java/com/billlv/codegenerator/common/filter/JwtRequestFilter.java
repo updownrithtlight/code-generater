@@ -3,6 +3,7 @@ package com.billlv.codegenerator.common.filter;
 import com.billlv.codegenerator.common.utils.JwtUtils;
 import com.billlv.codegenerator.domain.vo.UsersVO;
 import com.billlv.codegenerator.service.UsersService;
+import com.billlv.codegenerator.service.impl.UserDetailsImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -49,7 +52,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
             String userId = jwtUtils.getUserIdFromToken(token);
 
-            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication().getPrincipal().equals("anonymousUser")) {
                 authenticateUser(userId, token, request);
             }
 
@@ -111,7 +114,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try {
             // 从 Refresh Token 中提取用户名
             String userId = jwtUtils.getUserIdFromToken(refreshToken);
-            UsersVO usersVO = userService.read(Long.parseLong(userId));
 //            // 加载用户信息
 //            UserDetails userDetails = userService.loadUserByUsername(usersVO.getUsername());
 
@@ -127,7 +129,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             response.addCookie(newAccessTokenCookie);
 
             // 将用户重新认证到 SecurityContext
-            authenticateUser(usersVO.getUsername()
+            authenticateUser(userId
                     , newAccessToken, request);
 
             // 继续执行后续过滤器链
@@ -135,7 +137,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         } catch (Exception e) {
             logger.error("Error during token refresh", e);
-            respondWithError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to refresh token");
+            respondWithError(response, HttpServletResponse.SC_UNAUTHORIZED, "Unable to refresh token");
         }
     }
 
@@ -153,21 +155,58 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
         return null;
     }
-
-
     /**
-     * 执行用户认证
+     * 执行用户认证（仅基于 userId）
      */
     private void authenticateUser(String userId, String token, HttpServletRequest request) {
-        UsersVO usersVO = userService.read(Long.parseLong(userId));
-        UserDetails userDetails = userService.loadUserByUsername(usersVO.getUsername());
+        // 验证 Token 的合法性
         if (jwtUtils.validateJwtToken(token)) {
+            // 从数据库或缓存加载用户信息
+            UsersVO usersVO = userService.read(Long.parseLong(userId));
+
+            UserDetailsImpl userDetails = new UserDetailsImpl(
+                    usersVO.getId(),
+                    usersVO.getUsername(),
+                    "", // 密码为空
+                    List.of() // 空权限列表
+            );
+            // 构建认证对象
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+            // 将认证信息存入 SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
     }
+//
+//
+//    private void authenticateUser(String userId, String token, HttpServletRequest request) {
+//        if (jwtUtils.validateJwtToken(token)) {
+//            // 加载用户信息（从数据库或缓存中）
+//            UsersVO usersVO = userService.read(Long.parseLong(userId));
+//            List<GrantedAuthority> authorities = usersVO.getRoles().stream()
+//                    .map(SimpleGrantedAuthority::new)
+//                    .collect(Collectors.toList());
+//
+//            // 构建 UserDetails 对象（可选）
+//            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+//                    usersVO.getUsername(),
+//                    "",
+//                    authorities
+//            );
+//
+//            // 构建认证对象
+//            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+//                    userDetails, null, authorities);
+//            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//
+//            // 设置认证信息到 SecurityContext
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//        }
+//    }
+
+
 
     /**
      * 返回错误响应

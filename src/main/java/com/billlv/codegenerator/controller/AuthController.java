@@ -6,10 +6,15 @@ import com.billlv.codegenerator.domain.dto.LoginRequestDTO;
 import com.billlv.codegenerator.domain.vo.UsersVO;
 import com.billlv.codegenerator.exception.user.UserException;
 import com.billlv.codegenerator.service.AuthService;
+import com.billlv.codegenerator.service.impl.UserDetailsImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.Cookie;
@@ -29,15 +34,24 @@ public class AuthController {
     private JwtUtils jwtUtils;
 
     @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
     private CookieProperties cookieProperties;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO loginRequest, HttpServletResponse response) {
         try {
             // 调用 AuthService 的登录逻辑
-            String userId = authService.login(loginRequest.getUsername(), loginRequest.getPassword());
-            String accessToken = jwtUtils.generateAccessToken(userId);
-            String refreshToken = jwtUtils.generateRefreshToken(userId);
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
+            Long userId = ((UserDetailsImpl) authentication.getPrincipal()).getUserId();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String accessToken = jwtUtils.generateAccessToken(userId+"");
+            String refreshToken = jwtUtils.generateRefreshToken(userId+"");
             // 设置 Access Token 到 Cookie
             Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
             accessTokenCookie.setHttpOnly(cookieProperties.getAccessToken().isHttpOnly());

@@ -4,6 +4,8 @@ import com.billlv.codegenerator.domain.entity.TableFieldMetadata;
 import com.billlv.codegenerator.domain.entity.TableMetaData;
 import com.billlv.codegenerator.service.TableMetaDataService;
 import com.billlv.codegenerator.common.utils.Result;
+import com.billlv.codegenerator.service.UserContextService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -34,12 +36,14 @@ public class TableController {
     }
 
 
-
+    @Autowired
+    private UserContextService userContextService;
     /**
      * 根据 tableId 查询字段信息
      */
     @GetMapping("/{tableId}/columns")
     public ResponseEntity<Result<List<TableFieldMetadata>>> getColumnsByTableId(@PathVariable Long tableId) {
+     userContextService.getCurrentUser();
         return ResponseEntity.ok(Result.success(tableMetaDataService.getColumnsByTableId(tableId)));
 
     }

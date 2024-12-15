@@ -1,100 +1,85 @@
 package com.billlv.codegenerator.service;
-
-import com.billlv.codegenerator.common.utils.JwtUtils;
 import com.billlv.codegenerator.common.utils.RedisUtility;
-import com.billlv.codegenerator.domain.dto.UsersDTO;
-import com.billlv.codegenerator.domain.entity.UsersEntity;
-import com.billlv.codegenerator.exception.global.ErrorCode;
-import com.billlv.codegenerator.exception.user.UnauthorizedException;
-import com.billlv.codegenerator.exception.user.UserException;
-import com.billlv.codegenerator.repository.UsersRepository;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import com.billlv.codegenerator.domain.vo.UsersVO;
+import com.billlv.codegenerator.service.impl.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 
-@Slf4j
 @Service
 public class UserContextService {
 
     @Autowired
-    private RedisUtility redisUtility;
-
+    private UsersService usersService;
     @Autowired
-    private UsersRepository userRepository;
-
-    @Autowired
-    private JwtUtils jwtUtils;
+    private RedisUtility<UsersVO> redisUtility; // 使用 Redis 缓存
+    private static final String REDIS_USER_PREFIX = "USER_CONTEXT:"; // Redis 缓存键前缀
+    private static final long CACHE_EXPIRE_TIME = 3600; // 缓存过期时间（分钟）
 
     /**
-     * 获取当前用户信息
+     * 获取当前用户的 Authentication 对象
      */
-    public UsersEntity getCurrentUser(HttpServletRequest request, HttpServletResponse response) {
-        // 从 Cookie 中获取 Token
-        String accessToken = extractTokenFromCookie(request, "accessToken");
-
-        if (accessToken == null || !jwtUtils.validateJwtToken(accessToken)) {
-            throw new UnauthorizedException("Invalid or missing token");
-        }
-
-        // 从 Token 中提取用户 ID
-        String userId = jwtUtils.getUserIdFromToken(accessToken);
-
-        // 优先从缓存获取用户信息
-        UsersEntity usersEntity = getCachedUserDetails(userId);
-        if (usersEntity != null) {
-            return usersEntity;
-        }
-
-        // 缓存未命中，从数据库查询
-        usersEntity = userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
-
-        // 写入缓存
-        cacheUserDetails(userId, usersEntity);
-
-        return usersEntity;
+    public Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
     }
 
     /**
-     * 从 Redis 缓存获取用户信息
+     * 获取当前用户的 userId（从 principal 提取）
      */
-    private UsersEntity getCachedUserDetails(String userId) {
-        try {
-            return (UsersEntity) redisUtility.get("user:" + userId);
-        } catch (Exception e) {
-            log.warn("Failed to fetch user details from cache: {}", e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * 缓存用户信息到 Redis
-     */
-    private void cacheUserDetails(String userId, UsersEntity userDetails) {
-        try {
-            redisUtility.save("user:" + userId, userDetails, 36000);
-        } catch (Exception e) {
-            log.warn("Failed to cache user details: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * 从 Cookie 中提取指定名称的 Token
-     */
-    private String extractTokenFromCookie(HttpServletRequest request, String cookieName) {
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (cookieName.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
+    public Long getCurrentUserId() {
+        Authentication authentication = getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            // 根据认证类型提取 userId
+            if (principal instanceof Long) {
+                return (Long) principal; // 如果 userId 是 String 类型
+            } else if (principal instanceof UserDetailsImpl) {
+                return ((UserDetailsImpl) principal).getUserId(); // 如果是 UserDetails，取用户名
             }
         }
-        return null;
+        throw new RuntimeException("未认证的用户");
+    }
+
+    /**
+     * 获取当前用户的完整信息，使用 Redis 缓存优化
+     */
+    public UsersVO getCurrentUser() {
+        Long userId = getCurrentUserId();
+        String redisKey = REDIS_USER_PREFIX + userId;
+
+        // 从 Redis 缓存中获取用户信息
+        UsersVO cachedUser = redisUtility.get(redisKey);
+        if (cachedUser != null) {
+            return cachedUser;
+        }
+        // 缓存未命中，加载用户信息并缓存
+        UsersVO user = loadUserFromDatabase(userId);
+        redisUtility.save(redisKey, user, CACHE_EXPIRE_TIME); // 设置过期时间
+        return user;
+    }
+
+    /**
+     * 检查当前用户是否已认证
+     */
+    public boolean isAuthenticated() {
+        Authentication authentication = getAuthentication();
+        return authentication != null && authentication.isAuthenticated();
+    }
+
+    /**
+     * 模拟从数据库加载用户信息的方法
+     */
+    private UsersVO loadUserFromDatabase(Long userId) {
+        return usersService.read(userId);
+    }
+
+    /**
+     * 删除 Redis 缓存（例如用户信息更新时调用）
+     */
+    public void evictUserCache(String userId) {
+        String redisKey = REDIS_USER_PREFIX + userId;
+        redisUtility.delete(redisKey);
     }
 }

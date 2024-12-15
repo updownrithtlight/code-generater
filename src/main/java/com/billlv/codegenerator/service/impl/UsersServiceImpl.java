@@ -17,7 +17,6 @@ import com.billlv.codegenerator.specification.UsersSpecification;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UsersServiceImpl implements UsersService {
@@ -95,10 +94,4 @@ public class UsersServiceImpl implements UsersService {
     }
 
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UsersVO usersVO = findByUsername(username);
-        return new org.springframework.security.core.userdetails.User(usersVO.getUsername(), usersVO.getPassword(), new ArrayList<>());
-
-    }
 }

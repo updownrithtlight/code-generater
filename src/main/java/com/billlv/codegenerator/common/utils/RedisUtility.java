@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
-public class RedisUtility {
+public class RedisUtility<T> {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, T> redisTemplate;
 
     /**
      * Save an object to Redis with a TTL (Time to Live).
@@ -22,7 +22,7 @@ public class RedisUtility {
      * @param value the value
      * @param ttl   the TTL in seconds
      */
-    public void save(String key, Object value, long ttl) {
+    public void save(String key, T value, long ttl) {
         redisTemplate.opsForValue().set(key, value, Duration.ofSeconds(ttl));
     }
 
@@ -32,7 +32,7 @@ public class RedisUtility {
      * @param key   the key
      * @param value the value
      */
-    public void save(String key, Object value) {
+    public void save(String key, T value) {
         redisTemplate.opsForValue().set(key, value);
     }
 
@@ -42,7 +42,7 @@ public class RedisUtility {
      * @param key the key
      * @return the object, or null if not found
      */
-    public Object get(String key) {
+    public T get(String key) {
         return redisTemplate.opsForValue().get(key);
     }
 
@@ -61,7 +61,7 @@ public class RedisUtility {
      * @param key the key
      * @param map the hash map
      */
-    public void saveHash(String key, Map<String, Object> map) {
+    public void saveHash(String key, Map<String, T> map) {
         redisTemplate.opsForHash().putAll(key, map);
     }
 
@@ -91,18 +91,8 @@ public class RedisUtility {
      * @param key   the key
      * @param value the value
      */
-    public void pushToList(String key, String value) {
+    public void pushToList(String key, T value) {
         redisTemplate.opsForList().rightPush(key, value);
-    }
-
-    /**
-     * Pop an item from a Redis list (pop from the start).
-     *
-     * @param key the key
-     * @return the value, or null if the list is empty
-     */
-    public Object popFromList(String key) {
-        return redisTemplate.opsForList().leftPop(key);
     }
 
     /**
@@ -111,7 +101,7 @@ public class RedisUtility {
      * @param key the key
      * @return the list of items
      */
-    public List<Object> getList(String key) {
+    public List<T> getList(String key) {
         return redisTemplate.opsForList().range(key, 0, -1);
     }
 
@@ -121,7 +111,7 @@ public class RedisUtility {
      * @param key   the key
      * @param value the value
      */
-    public void addToSet(String key, String value) {
+    public void addToSet(String key, T value) {
         redisTemplate.opsForSet().add(key, value);
     }
 
@@ -131,18 +121,8 @@ public class RedisUtility {
      * @param key the key
      * @return the set of items
      */
-    public Set<Object> getSet(String key) {
+    public Set<T> getSet(String key) {
         return redisTemplate.opsForSet().members(key);
-    }
-
-    /**
-     * Remove an item from a Redis set.
-     *
-     * @param key   the key
-     * @param value the value to remove
-     */
-    public void removeFromSet(String key, String value) {
-        redisTemplate.opsForSet().remove(key, value);
     }
 
     /**
@@ -152,7 +132,7 @@ public class RedisUtility {
      * @param value the value
      * @param score the score
      */
-    public void addToZSet(String key, String value, double score) {
+    public void addToZSet(String key, T value, double score) {
         redisTemplate.opsForZSet().add(key, value, score);
     }
 
@@ -164,7 +144,7 @@ public class RedisUtility {
      * @param maxScore the maximum score
      * @return the set of items
      */
-    public Set<Object> getZSet(String key, double minScore, double maxScore) {
+    public Set<T> getZSet(String key, double minScore, double maxScore) {
         return redisTemplate.opsForZSet().rangeByScore(key, minScore, maxScore);
     }
 
@@ -174,7 +154,7 @@ public class RedisUtility {
      * @param key   the key
      * @param value the value to remove
      */
-    public void removeFromZSet(String key, String value) {
+    public void removeFromZSet(String key, T value) {
         redisTemplate.opsForZSet().remove(key, value);
     }
 }
