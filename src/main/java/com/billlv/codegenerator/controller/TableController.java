@@ -43,7 +43,6 @@ public class TableController {
      */
     @GetMapping("/{tableId}/columns")
     public ResponseEntity<Result<List<TableFieldMetadata>>> getColumnsByTableId(@PathVariable Long tableId) {
-     userContextService.getCurrentUser();
         return ResponseEntity.ok(Result.success(tableMetaDataService.getColumnsByTableId(tableId)));
 
     }
